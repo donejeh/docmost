@@ -139,3 +139,44 @@ describe("pasting plain text", () => {
     ]);
   });
 });
+
+describe("pasting a markdown table", () => {
+  function markdownTable(columns: number) {
+    const cells = Array.from({ length: columns }, (_, i) => `c${i + 1}`);
+    return [
+      `| ${cells.join(" | ")} |`,
+      `| ${cells.map(() => "---").join(" | ")} |`,
+      `| ${cells.join(" | ")} |`,
+    ].join("\n");
+  }
+
+  function firstRowWidths() {
+    let widths: unknown[] = [];
+    editor.state.doc.descendants((node) => {
+      if (node.type.name !== "table") return true;
+      widths = [];
+      node.firstChild?.forEach((cell) => widths.push(cell.attrs.colwidth));
+      return false;
+    });
+    return widths;
+  }
+
+  it.each([2, 4, 5])(
+    "leaves a %i column table without widths so it fills the editor",
+    (columns) => {
+      createEditor([{ type: "paragraph" }], 1);
+
+      pastePlainText(markdownTable(columns));
+
+      expect(firstRowWidths()).toEqual(new Array(columns).fill(null));
+    },
+  );
+
+  it("gives a table too wide for the editor the default widths", () => {
+    createEditor([{ type: "paragraph" }], 1);
+
+    pastePlainText(markdownTable(6));
+
+    expect(firstRowWidths()).toEqual(new Array(6).fill([150]));
+  });
+});

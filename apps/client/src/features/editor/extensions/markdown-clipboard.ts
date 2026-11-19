@@ -204,6 +204,9 @@ function closeRange(
 
 const DEFAULT_PASTE_COL_WIDTH_PX = 150;
 
+// The editor's content width at the default page width.
+const EDITOR_CONTENT_WIDTH_PX = 772;
+
 function parsePixelWidth(el: Element): number | null {
   const attr = el.getAttribute("width");
   if (attr) {
@@ -253,9 +256,10 @@ function deriveColumnWidths(table: Element): (number | null)[] | null {
 }
 
 // Mirror of server normalizeTableColumnWidths (see import/utils/table-utils.ts):
-// markdown source has no widths, so without this every pasted table renders
-// at table-layout:fixed/100% and squashes columns to fit the editor instead of
-// letting .tableWrapper's overflow-x: auto scroll.
+// markdown source has no widths, so without this a pasted table with many
+// columns renders at table-layout:fixed/100% and squashes them to fit the
+// editor instead of letting .tableWrapper's overflow-x: auto scroll. A table
+// whose columns fit at the default width keeps no widths and fills the editor.
 export function normalizeTableColumnWidths(root: Element): void {
   root.querySelectorAll("table").forEach((table) => {
     const firstRow = getFirstRow(table);
@@ -270,6 +274,9 @@ export function normalizeTableColumnWidths(root: Element): void {
           count += parseInt(cell.getAttribute("colspan") || "1", 10) || 1;
         });
       if (count === 0) return;
+      if (count * DEFAULT_PASTE_COL_WIDTH_PX <= EDITOR_CONTENT_WIDTH_PX) {
+        return;
+      }
       colWidths = new Array(count).fill(DEFAULT_PASTE_COL_WIDTH_PX);
     }
 

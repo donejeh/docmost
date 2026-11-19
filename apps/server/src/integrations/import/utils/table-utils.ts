@@ -2,6 +2,9 @@ import { CheerioAPI, Cheerio } from 'cheerio';
 
 const DEFAULT_IMPORT_COL_WIDTH_PX = 150;
 
+// The editor's content width at the default page width.
+const EDITOR_CONTENT_WIDTH_PX = 772;
+
 /**
  * Extracts a pixel-integer width from either the `width` attribute or
  * `style="width: Npx"` on a <col>/<td>/<th>. Returns null when absent,
@@ -77,15 +80,20 @@ export function normalizeTableColumnWidths(
 
     let colWidths = deriveColumnWidths($, table);
     if (!colWidths) {
-      // No widths anywhere (e.g. markdown-sourced tables). Apply a default
-      // per-column width so the table's intrinsic width can exceed the
-      // editor container, letting .tableWrapper's overflow-x: auto scroll
-      // instead of cramming columns into the available width.
+      // No widths anywhere (e.g. markdown-sourced tables). When the columns
+      // would not fit at the default width, apply it so the table's intrinsic
+      // width can exceed the editor container, letting .tableWrapper's
+      // overflow-x: auto scroll instead of cramming columns into the
+      // available width. Tables that fit keep no widths and fill the editor
+      // like a table inserted there, each column at least the default width.
       let count = 0;
       firstRow.children('td, th').each(function () {
         count += parseInt($(this).attr('colspan') || '1', 10) || 1;
       });
       if (count === 0) return;
+      if (count * DEFAULT_IMPORT_COL_WIDTH_PX <= EDITOR_CONTENT_WIDTH_PX) {
+        return;
+      }
       colWidths = new Array(count).fill(DEFAULT_IMPORT_COL_WIDTH_PX);
     }
 
