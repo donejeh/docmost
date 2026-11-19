@@ -25,10 +25,9 @@ import EmojiCommand from "@/features/editor/extensions/emoji-command.ts";
 import { UpdateEvent } from "@/features/websocket/types";
 import localEmitter from "@/lib/local-emitter.ts";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
-import { searchSpotlight } from "@/features/search/constants.ts";
-import { platformModifierKey } from "@/lib";
 import { usePageEditMode } from "@/ee/page-verification/hooks/use-page-edit-mode";
 import { splitTitleIntoPage } from "@/features/editor/title-editor.utils";
+import { handleEditorShortcut } from "@/features/editor/utils/editor-shortcuts";
 
 export interface TitleEditorProps {
   pageId: string;
@@ -99,14 +98,7 @@ export function TitleEditor({
       },
       handleDOMEvents: {
         keydown: (_view, event) => {
-          if (platformModifierKey(event) && event.code === "KeyS") {
-            event.preventDefault();
-            return true;
-          }
-          if (platformModifierKey(event) && event.code === "KeyK") {
-            searchSpotlight.open();
-            return true;
-          }
+          if (handleEditorShortcut(event)) return true;
         },
       },
     },

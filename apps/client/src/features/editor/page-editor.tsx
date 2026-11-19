@@ -73,11 +73,11 @@ import { useIdle } from "@/hooks/use-idle.ts";
 import { queryClient } from "@/main.tsx";
 import { IPage } from "@/features/page/types/page.types.ts";
 import { useParams, useSearchParams } from "react-router-dom";
-import { extractPageSlugId, platformModifierKey } from "@/lib";
+import { extractPageSlugId } from "@/lib";
 import { FIVE_MINUTES } from "@/lib/constants.ts";
 import { PageEditMode } from "@/features/user/types/user.types.ts";
 import { jwtDecode } from "jwt-decode";
-import { searchSpotlight } from "@/features/search/constants.ts";
+import { handleEditorShortcut } from "@/features/editor/utils/editor-shortcuts";
 import { useEditorScroll } from "./hooks/use-editor-scroll";
 import { usePageYdoc } from "./hooks/use-page-ydoc";
 import { useDestroyEditorBeforeChildren } from "./hooks/use-destroy-editor-before-children";
@@ -317,14 +317,7 @@ function CollabPageEditor({
         },
         handleDOMEvents: {
           keydown: (_view, event) => {
-            if (platformModifierKey(event) && event.code === "KeyS") {
-              event.preventDefault();
-              return true;
-            }
-            if (platformModifierKey(event) && event.code === "KeyK") {
-              searchSpotlight.open();
-              return true;
-            }
+            if (handleEditorShortcut(event)) return true;
             if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
               const slashCommand = document.querySelector("#slash-command");
               if (slashCommand) {
